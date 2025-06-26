@@ -1,0 +1,21 @@
+services:
+  pygeoapi:
+    image: geopython/pygeoapi:latest
+
+    container_name: pygeoapi
+
+    ports:
+      - 5001:80
+    # env_file: ".env"
+    environment:
+      - PHOST
+    volumes:
+      - ./pygeoapi.config.yml:/pygeoapi/local.config.yml # Config file
+      - ./data:/data # Pull data from here
+    networks:
+      - my-shared-network
+
+networks:
+     my-shared-network:
+      name: my-shared-network
+      driver: bridge

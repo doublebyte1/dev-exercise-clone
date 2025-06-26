@@ -1,0 +1,47 @@
+name: Test your OGC API ⚙️
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  pygeoapi:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.2.2
+
+    - name: Start pygeoapi
+      run: |
+           export PHOST=http://pygeoapi:80 && docker compose \
+           -f "./apps/pygeoapi/docker-compose.yml" up -d --build
+          
+    - name: Start teamengine
+      run: |
+        docker run -d --name=teamengine \
+        --add-host=host.docker.internal:host-gateway --publish=9080:8080 \
+         --network=my-shared-network ogccite/teamengine-production:1.0-SNAPSHOT
+
+    - name: "Install cite-runner"
+      run: pipx install ogc-cite-runner
+
+    - name: "Test OGC API - Features compliance"
+      run: |
+        export PATH="$PATH:/root/.local/bin/" && ogc-cite-runner \
+        execute-test-suite http://localhost:9080/teamengine ogcapi-features-1.0 \
+        --suite-input iut http://pygeoapi:80 --suite-input noofcollections 1 \
+        --output-format console
+
+    - name: Stop containers
+      if: always()
+      run: docker compose -f "./apps/pygeoapi/docker-compose.yml" down -v
+
+    - name: Stop cite-runner
+      if: always()
+      run: docker stop teamengine && docker rm -f teamengine
