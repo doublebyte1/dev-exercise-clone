@@ -22,7 +22,7 @@ logging:
 
 metadata:
     identification:
-        title: OGC API Instance
+        title: OGC API Instance - Course
         description: pygeoapi instance in support of the OGC APIs for Data Publishers Training Course
         keywords:
             - geospatial
